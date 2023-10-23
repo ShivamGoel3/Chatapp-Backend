@@ -28,7 +28,9 @@ app.use(cookieParser());
 app.get('/jwt', async (req, res) => {
   // res.send("hi");{}
    try{
-const cookie=req.cookies['jwt']
+const cookie=req.headers['Authorization'].split(' ')[1];
+
+//req.cookies['jwt']
 const claims=jwt.verify(cookie,process.env.JWT_SECRET)
 // console.log(claims);
 if(!claims){
