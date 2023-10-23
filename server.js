@@ -20,7 +20,7 @@ const Message = require('./models/messageModel');
 
 app.use(cors({
   credentials:true,
-  origin:['https://chatapp-frontend-sozu.onrender.com']
+  origin:['*']
 }));
 app.use(express.json());
 app.use(cookieParser());
@@ -105,6 +105,7 @@ app.post('/login', asyncHandler(async (req, res) => {
   if (user && user.password == password) {
 
     const token= generateToken(user)
+    // console.log(token);
     res.cookie("jwt",token,{
      httpOnly:true,
      maxAge:24*60*60*1000
@@ -117,7 +118,7 @@ app.post('/login', asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       mobile: user.mobile,
-       token: token ,
+      //  token: token ,/
       message: "valid user"
     });
   } else {
