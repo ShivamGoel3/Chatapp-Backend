@@ -20,7 +20,7 @@ const Message = require('./models/messageModel');
 
 app.use(cors({
   credentials:true,
-  origin:['*']
+  origin:['http://chatapp-frontend-sozu.onrender.com']
 }));
 app.use(express.json());
 app.use(cookieParser());
