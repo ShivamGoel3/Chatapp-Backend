@@ -117,7 +117,7 @@ app.post('/login', asyncHandler(async (req, res) => {
       name: user.name,
       email: user.email,
       mobile: user.mobile,
-      // token: generateToken(user._id) ,
+       token: token ,
       message: "valid user"
     });
   } else {
