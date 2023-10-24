@@ -1,3 +1,5 @@
+// import {LocalStorage} from 'node-localstorage' 
+// const localStorage=require('node-localstorage')
 const express = require('express')
 const app = express();
 const jwt=require('jsonwebtoken')
@@ -19,10 +21,10 @@ const Message = require('./models/messageModel');
 
 
 
-import {LocalStorage} from 'node-localstorage' 
-
+var LocalStorage = require('node-localstorage').LocalStorage,
+localStorage = new LocalStorage('./scratch');
 // constructor function to create a storage directory inside our project for all our localStorage setItem.
-var localStorage = new LocalStorage('./scratch'); 
+// var localStorage = new LocalStorage('./scratch'); 
 
 
 

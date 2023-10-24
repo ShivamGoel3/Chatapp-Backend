@@ -16,6 +16,7 @@
     "express-async-handler": "^1.2.0",
     "express-session": "^1.17.3",
     "jsonwebtoken": "^9.0.2",
+    "localStorage": "^1.0.4",
     "mongoose": "^7.6.3",
     "node-localstorage": "^3.0.5",
     "nodemon": "^3.0.1",
