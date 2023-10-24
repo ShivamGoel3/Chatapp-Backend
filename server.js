@@ -94,7 +94,9 @@ catch(err){
 );
 
 app.get('/logout',(req,res)=>{
-  res.cookie("jwt","",{maxAge:0})
+  // res.cookie("jwt","",{maxAge:0})
+  localStorage.removeItem("jwt");
+
   res.send({message:"logout"});
 })
 
