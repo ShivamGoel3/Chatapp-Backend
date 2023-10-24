@@ -28,9 +28,11 @@ app.use(cookieParser());
 app.get('/jwt', async (req, res) => {
   // res.send("hi");{}
    try{
-const cookie=req.headers['Authorization'].split(' ')[1];
+const cookie=req.cookies.jwt;
+console.log(cookie);
+//req.headers['Authorization'].split(' ')[1];
 
-//req.cookies['jwt']
+//
 const claims=jwt.verify(cookie,process.env.JWT_SECRET)
 // console.log(claims);
 if(!claims){
@@ -83,7 +85,14 @@ app.post('/signup', asyncHandler(async (req, res) => {
   //   httpOnly:true,
   //   maxAge:24*60*60*1000
   //  })
-
+  const token= generateToken(user)
+  // console.log(token);
+  res.cookie("jwt1",token,{
+   httpOnly:true,
+   maxAge:24*60*60*1000
+  //  samesite:'None' ,
+  //  secure:true
+  })
     res.status(201).json({
       _id: user._id,
       name: user.name,
