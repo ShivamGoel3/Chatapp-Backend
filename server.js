@@ -18,6 +18,37 @@ const User = require('./models/userModel');
 const Message = require('./models/messageModel');
 
 
+
+import {LocalStorage} from 'node-localstorage' 
+
+// constructor function to create a storage directory inside our project for all our localStorage setItem.
+var localStorage = new LocalStorage('./scratch'); 
+
+
+
+
+// const passport = require('passport')
+// const session = require('express-session')
+// //Import the secondary "Strategy" library
+// const LocalStrategy = require('passport-local').Strategy
+// app.use(session({
+//   secret: "secret",
+//   resave: false ,
+//   saveUninitialized: true ,
+// }))
+// // This is the basic express session({..}) initialization.
+// app.use(passport.initialize()) 
+// // init passport on every route call.
+// app.use(passport.session())    
+// // allow passport to use "express-session".
+// passport.use(new LocalStrategy (authUser))
+
+
+
+
+
+
+
 app.use(cors({
   credentials:true,
   origin:["https://chatapp-frontend-sozu.onrender.com"]
@@ -28,7 +59,10 @@ app.use(cookieParser());
 app.get('/jwt', async (req, res) => {
   // res.send("hi");{}
    try{
-const cookie=req.cookies.jwt;
+const cookie=localStorage.getItem('jwt')
+//req.cookies.jwt;
+// console.log(localStorage.getItem('Name'))
+
 console.log(cookie);
 //req.headers['Authorization'].split(' ')[1];
 
@@ -85,14 +119,14 @@ app.post('/signup', asyncHandler(async (req, res) => {
   //   httpOnly:true,
   //   maxAge:24*60*60*1000
   //  })
-  const token= generateToken(user)
-  // console.log(token);
-  res.cookie("jwt1",token,{
-   httpOnly:true,
-   maxAge:24*60*60*1000
-  //  samesite:'None' ,
-  //  secure:true
-  })
+  // const token= generateToken(user)
+  // // console.log(token);
+  // res.cookie("jwt1",token,{
+  //  httpOnly:true,
+  //  maxAge:24*60*60*1000
+  // //  samesite:'None' ,
+  // //  secure:true
+  // })
     res.status(201).json({
       _id: user._id,
       name: user.name,
@@ -116,13 +150,17 @@ app.post('/login', asyncHandler(async (req, res) => {
   if (user && user.password == password) {
 
     const token= generateToken(user)
+    localStorage.setItem('jwt', token) 
+
     // console.log(token);
-    res.cookie("jwt",token,{
-     httpOnly:true,
-     maxAge:24*60*60*1000
-    //  samesite:'None' ,
-    //  secure:true
-    })
+    // res.cookie("jwt",token,{
+    //  httpOnly:true,
+    //  maxAge:24*60*60*1000,
+    //  Domain:.excample.com,
+    //   // Path:/. ,
+    //  samesite:'None' 
+    // //  secure:true
+    // })
 
     res.json({
       _id: user._id,
