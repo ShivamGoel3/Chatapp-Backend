@@ -94,8 +94,12 @@ app.post('/login', asyncHandler(async (req, res) => {
   const { mobile, password } = req.body;
 
   const user = await User.findOne({ mobile });
-
-  if (user && (await user.matchPassword(password))) {
+  if (!user) {
+    res.json({
+      message: "User Not exist"
+    });
+  }
+  else if (user && (await user.matchPassword(password))) {
 
     const token = generateToken(user._id)
     localStorage.setItem('jwt', token)
