@@ -9,14 +9,9 @@ const generateToken = require("./config/generateToken")
 const connectDB = require('./config/db');
 connectDB();
 const cookieParser = require('cookie-parser')
-
 const Chat = require('./models/chatModel');
 const User = require('./models/userModel');
 const Message = require('./models/messageModel');
-
-var LocalStorage = require('node-localstorage').LocalStorage,
-  localStorage = new LocalStorage('./scratch');
-
 const bcrypt = require("bcryptjs");
 
 
@@ -28,10 +23,9 @@ app.use(express.json());
 app.use(cookieParser());
 
 
-app.get('/jwt', async (req, res) => {
-
+app.post('/jwt', async (req, res) => {
   try {
-    const cookie = localStorage.getItem('jwt')
+    const cookie = req.body.token;
     const claims = jwt.verify(cookie, process.env.JWT_SECRET)
     if (!claims) {
       res.send({ message: "Authentication failed" }
@@ -43,7 +37,6 @@ app.get('/jwt', async (req, res) => {
       }).select('-password')
       res.send(user)
     }
-
   }
   catch (err) {
     console.log("failed")
@@ -52,10 +45,6 @@ app.get('/jwt', async (req, res) => {
 }
 );
 
-app.get('/logout', (req, res) => {
-  localStorage.removeItem("jwt");
-  res.send({ message: "logout" });
-})
 
 app.post('/signup', asyncHandler(async (req, res) => {
   const { name, email, mobile, password } = req.body;
@@ -102,13 +91,8 @@ app.post('/login', asyncHandler(async (req, res) => {
   else if (user && (await user.matchPassword(password))) {
 
     const token = generateToken(user._id)
-    localStorage.setItem('jwt', token)
-
     res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      mobile: user.mobile,
+      token: token,
       message: "valid user"
     });
   } else {
