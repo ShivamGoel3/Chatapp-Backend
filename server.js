@@ -1,107 +1,64 @@
-// import {LocalStorage} from 'node-localstorage' 
-// const localStorage=require('node-localstorage')
 const express = require('express')
 const app = express();
-const jwt=require('jsonwebtoken')
-
+const jwt = require('jsonwebtoken')
 const dotenv = require("dotenv");
 dotenv.config();
 const asyncHandler = require("express-async-handler");
-
 const cors = require('cors');
 const generateToken = require("./config/generateToken")
-// const jwt=require('jsonwebtoken');
 const connectDB = require('./config/db');
 connectDB();
-const cookieParser=require('cookie-parser')
+const cookieParser = require('cookie-parser')
 
 const Chat = require('./models/chatModel');
 const User = require('./models/userModel');
 const Message = require('./models/messageModel');
 
-
-
 var LocalStorage = require('node-localstorage').LocalStorage,
-localStorage = new LocalStorage('./scratch');
-// constructor function to create a storage directory inside our project for all our localStorage setItem.
-// var localStorage = new LocalStorage('./scratch'); 
+  localStorage = new LocalStorage('./scratch');
 
-
-
-
-// const passport = require('passport')
-// const session = require('express-session')
-// //Import the secondary "Strategy" library
-// const LocalStrategy = require('passport-local').Strategy
-// app.use(session({
-//   secret: "secret",
-//   resave: false ,
-//   saveUninitialized: true ,
-// }))
-// // This is the basic express session({..}) initialization.
-// app.use(passport.initialize()) 
-// // init passport on every route call.
-// app.use(passport.session())    
-// // allow passport to use "express-session".
-// passport.use(new LocalStrategy (authUser))
-
-
-
-
-
+const bcrypt = require("bcryptjs");
 
 
 app.use(cors({
-  credentials:true,
-  origin:["https://chatapp-frontend-sozu.onrender.com"]
+  credentials: true,
+  origin: ["https://chatapp-frontend-sozu.onrender.com"]
 }));
 app.use(express.json());
 app.use(cookieParser());
 
+
 app.get('/jwt', async (req, res) => {
-  // res.send("hi");{}
-   try{
-const cookie=localStorage.getItem('jwt')
-//req.cookies.jwt;
-// console.log(localStorage.getItem('Name'))
 
-console.log(cookie);
-//req.headers['Authorization'].split(' ')[1];
+  try {
+    const cookie = localStorage.getItem('jwt')
+    const claims = jwt.verify(cookie, process.env.JWT_SECRET)
+    if (!claims) {
+      res.send({ message: "Authentication failed" }
+      )
+    }
+    else {
+      var user = await User.findOne({
+        _id: claims.id
+      }).select('-password')
+      res.send(user)
+    }
 
-//
-const claims=jwt.verify(cookie,process.env.JWT_SECRET)
-// console.log(claims);
-if(!claims){
-  res.send({message:"Authentication failed"}
-  )
-}
-
-else{
-  const user=await User.findOne({
-    _id:claims.id._id
-  })
-  // const {password,...data}=await user.toJSON()
-  // console.log(user);
-  res.send(user)
-}
-
-   }
-catch(err){
-  console.log("failed")
-  return res.status(401).send({message:"Authentication failed"})
-}
+  }
+  catch (err) {
+    console.log("failed")
+    return res.status(401).send({ message: "Authentication failed" })
+  }
 }
 );
 
-app.get('/logout',(req,res)=>{
-  // res.cookie("jwt","",{maxAge:0})
+app.get('/logout', (req, res) => {
   localStorage.removeItem("jwt");
-
-  res.send({message:"logout"});
+  res.send({ message: "logout" });
 })
 
 app.post('/signup', asyncHandler(async (req, res) => {
-  const { name, email,mobile, password } = req.body;
+  const { name, email, mobile, password } = req.body;
   if (!name || !email || !password || !mobile) {
     res.json({
       message: "Please Enter all the fields"
@@ -113,30 +70,17 @@ app.post('/signup', asyncHandler(async (req, res) => {
       message: "User already exist"
     });
   }
+
   const user = await User.create({
-    name, email, mobile,password
+    name, email, mobile, password
   });
   if (user) {
-
-  //  const token= generateToken(user._id)
-  //  res.cookie("jwt",token,{
-  //   httpOnly:true,
-  //   maxAge:24*60*60*1000
-  //  })
-  // const token= generateToken(user)
-  // // console.log(token);
-  // res.cookie("jwt1",token,{
-  //  httpOnly:true,
-  //  maxAge:24*60*60*1000
-  // //  samesite:'None' ,
-  // //  secure:true
-  // })
     res.status(201).json({
       _id: user._id,
       name: user.name,
       email: user.email,
       mobile: user.mobile,
-      
+
     });
   }
   else {
@@ -151,27 +95,16 @@ app.post('/login', asyncHandler(async (req, res) => {
 
   const user = await User.findOne({ mobile });
 
-  if (user && user.password == password) {
+  if (user && (await user.matchPassword(password))) {
 
-    const token= generateToken(user)
-    localStorage.setItem('jwt', token) 
-
-    // console.log(token);
-    // res.cookie("jwt",token,{
-    //  httpOnly:true,
-    //  maxAge:24*60*60*1000,
-    //  Domain:.excample.com,
-    //   // Path:/. ,
-    //  samesite:'None' 
-    // //  secure:true
-    // })
+    const token = generateToken(user._id)
+    localStorage.setItem('jwt', token)
 
     res.json({
       _id: user._id,
       name: user.name,
       email: user.email,
       mobile: user.mobile,
-      //  token: token ,/
       message: "valid user"
     });
   } else {
@@ -186,13 +119,11 @@ app.post("/alluser", asyncHandler(async (req, res) => {
   const { name } = req.body;
   const user = await User.find({ name });
   res.send(user)
-
 }));
 
 
 app.post("/accesschat", asyncHandler(async (req, res) => {
   const { userId, _id } = req.body;
- console.log(req.body);
   if (!userId) {
     console.log("UserId param not sent with request");
     return res.sendStatus(400);
@@ -292,7 +223,6 @@ app.post("/allmessages", asyncHandler(async (req, res) => {
     const messages = await Message.find({ chat: req.body.chatId })
       .populate("sender", "name mobile email")
       .populate("chat");
-      // console.log(messages)
     res.json(messages);
   } catch (error) {
     res.status(400);
@@ -301,13 +231,11 @@ app.post("/allmessages", asyncHandler(async (req, res) => {
 }));
 
 app.post("/deletemessage", asyncHandler(async (req, res) => {
-  // console.log(req.body._id);
   try {
- const detail= await Message.deleteOne({_id:req.body._id})
- res.send(detail);
-//  console.log(detail)
-}
-catch (error) {
+    const detail = await Message.deleteOne({ _id: req.body._id })
+    res.send(detail);
+  }
+  catch (error) {
     res.status(400);
     throw new Error(error.message);
   }
@@ -315,15 +243,15 @@ catch (error) {
 }));
 
 app.post("/editmessage", asyncHandler(async (req, res) => {
-      
-      try {
-   const detail=await Message.updateOne({_id:req.body._id},{$set:{content:req.body.content}})
-   res.send(detail)   
+
+  try {
+    const detail = await Message.updateOne({ _id: req.body._id }, { $set: { content: req.body.content } })
+    res.send(detail)
   }
-      catch (error) {
-          res.status(400);
-          throw new Error(error.message);
-        }
+  catch (error) {
+    res.status(400);
+    throw new Error(error.message);
+  }
 
 }));
 
@@ -331,44 +259,33 @@ app.post("/editmessage", asyncHandler(async (req, res) => {
 
 const httpServer = require('http').createServer(app);
 const io = require('socket.io')(httpServer, {
-    cors: { origin: "*" }
+  cors: { origin: "*" }
 });
- const PORT = 5000;
+const PORT = 5000;
 io.on('connection', (socket) => {
-    console.log('a user connected');
+  console.log('a user connected');
 
-    socket.on('join chat', (room) => {
-        socket.join(room);
-        console.log("User Joined Room: " + room);
-    });
+  socket.on('join chat', (room) => {
+    socket.join(room);
+    console.log("User Joined Room: " + room);
+  });
 
-    socket.on('message', (message) => {
-        // console.log(message);
-        io.emit('message', `
+  socket.on('message', (message) => {
+    io.emit('message', `
        ${message.sender.name}:
       ${message.content}`);
-    });
+  });
 
-    socket.on('notify', (message) => {
-        console.log(message);
-        io.emit('notify', "notify")
-    });
+  socket.on('notify', (message) => {
+    console.log(message);
+    io.emit('notify', "notify")
+  });
 
-    // socket.on('delete', () => {
-    //     // console.log(message);
-    //     io.emit('message', `
-    //    ${message.sender.name}:
-    //   ${message.content}`);
-    // });
-    // socket.emit("delete","deleted")
-    // socket.emit("edit","edited")
-
-    socket.on('disconnect', () => {
-        console.log('a user disconnected!');
-    });
+  socket.on('disconnect', () => {
+    console.log('a user disconnected!');
+  });
 });
 httpServer.listen(PORT, () => console.log(`listening on port ${PORT}`));
 
-// app.listen(5000, console.log("server connected at port 5000"));
 
 
