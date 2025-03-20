@@ -249,7 +249,7 @@ const httpServer = require('http').createServer(app);
 const io = require('socket.io')(httpServer, {
   cors: { origin: "*" }
 });
-const PORT = 5000;
+const PORT = 6000;
 io.on('connection', (socket) => {
   console.log('a user connected');
 
